@@ -68,6 +68,8 @@ struct FileRecordHeader {
     uint16_t    nextAttributeID;
     uint16_t    unused;
     uint32_t    recordNumber;
+    uint16_t    updateSequenceNumber;
+    wchar_t     updateSequenceArray[1];
 };
 
 struct AttributeHeader {
@@ -233,6 +235,8 @@ int main(int argc, char **argv) {
                 // so there's not much point in multithreading this.
 
                 FileRecordHeader *fileRecord = (FileRecordHeader *) (mftBuffer + MFT_FILE_SIZE * i);
+                wchar_t *overwrittenData = (wchar_t *) ((uint8_t *) fileRecord + MFT_FILE_SIZE / 2 - 2);
+                *overwrittenData = fileRecord->updateSequenceArray[0];
                 recordsProcessed++;
 
                 if (!fileRecord->inUse) continue;
