@@ -167,7 +167,7 @@ void Read(void *buffer, uint64_t from, uint64_t count) {
     assert(bytesAccessed == count);
 }
 
-int main(int argc, char **argv) {
+File *GetFiles() {
     drive = CreateFile("\\\\.\\C:", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 
     Read(&bootSector, 0, 512);
@@ -274,5 +274,5 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, "\nFound %lld files.\n", arrlen(files));
 
-    return 0;
+    return files;
 }
