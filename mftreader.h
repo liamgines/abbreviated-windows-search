@@ -1,3 +1,5 @@
+// Original source for this file: https://handmade.network/forums/articles/t/7002-tutorial_parsing_the_mft
+
 /*
     This is free and unencumbered software released into the public domain.
     Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
