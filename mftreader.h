@@ -124,7 +124,8 @@ struct RunHeader {
 
 struct File {
     uint64_t    parent;
-    char           *name;
+    char        *name;
+    char        *path;
 };
 
 File *files;
