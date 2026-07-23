@@ -1,4 +1,5 @@
 #include "mftreader.h"
+#include "sqlite3.h"
 
 #define SQLITE_MAX_SQL_LENGTH (1000000000)
 #define SQL_SIZE (SQLITE_MAX_SQL_LENGTH / 1000)
@@ -64,6 +65,10 @@ int GetFileValueLength(File *files, uint64_t i) {
     return 1 + (1 + strlen(file.name) + 1) + 2 + (1 + strlen(file.path) + 1) + 1; // ("name", "path")
 }
 
+void Ok(int sqliteResultCode) {
+    assert(sqliteResultCode == SQLITE_OK);
+}
+
 int main() {
     File *files = GetFiles();
 
@@ -73,11 +78,23 @@ int main() {
         files[i].path = GetPath(files, i);  // not a deep copy
     }
 
+    sqlite3 *database;
+
+    CreateDirectory("C:\\Search", NULL);
+    DeleteFile("C:\\Search\\Search.db");
+    Ok(sqlite3_open("C:\\Search\\Search.db", &database));
+    char *errorMessage;
+
     char sqlCreateFiles[] = "CREATE TABLE IF NOT EXISTS FILES("
                             "NAME TEXT, "
                             "PATH TEXT"
                             ");";
     fprintf(stderr, "\n%s\n\n", sqlCreateFiles);
+
+    if (sqlite3_exec(database, sqlCreateFiles, NULL, 0, &errorMessage) != SQLITE_OK) {
+        sqlite3_free(errorMessage);
+        exit(1);
+    }
 
     char sqlInsertFilesHeader[] = "INSERT INTO FILES (NAME, PATH) "
                                   "VALUES ";
@@ -100,6 +117,10 @@ int main() {
             sql[--sqlLength] = ';';
 
             fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, sqlLength);   // insert files
+            if (sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
+                sqlite3_free(errorMessage);
+                exit(1);
+            }
             sqlLength = strlen(sqlInsertFilesHeader);
         }
 
@@ -122,8 +143,15 @@ int main() {
         sql[--sqlLength] = ';';
 
         fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, sqlLength);   // insert files
-        // fprintf(stderr, "\n%s\n", sql);
+        if (sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
+            sqlite3_free(errorMessage);
+            exit(1);
+        }
     }
+
+    free(sql);
+
+    sqlite3_close(database);
 
     return 0;
 }
