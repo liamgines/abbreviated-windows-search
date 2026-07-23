@@ -1,4 +1,4 @@
-#include "mftreader.h"
+#include "mftreader.hpp"
 #include "sqlite3.h"
 
 #define SQLITE_MAX_SQL_LENGTH (1000000000)
