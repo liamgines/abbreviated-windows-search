@@ -69,6 +69,13 @@ void Ok(int sqliteResultCode) {
     assert(sqliteResultCode == SQLITE_OK);
 }
 
+static int PrintSearchResult(void *NotUsed, int argc, char **argv, char **azColName) {
+    for (int i = 0; i < argc; i++) {
+        fprintf(stderr, "%s\n", argv[i]);
+    }
+    return 0;
+}
+
 int main() {
     File *files = GetFiles();
 
@@ -147,6 +154,24 @@ int main() {
             sqlite3_free(errorMessage);
             exit(1);
         }
+    }
+
+    char sqlSelectFiles[] = "SELECT PATH || \"\\\" || NAME FROM FILES WHERE NAME LIKE ";
+    char searchQuery[MAX_PATH + 1];
+    while (fprintf(stderr, "\nQuery: ") && fgets(searchQuery, sizeof(searchQuery), stdin) != NULL) {
+        if (searchQuery[0] == '\n') {
+            break;
+        }
+        searchQuery[strlen(searchQuery) - 1] = 0;
+        snprintf(sql, strlen(sqlSelectFiles) + 2 + strlen(searchQuery) + 2 + 1 + 1, "%s\"%%%s%%\";", sqlSelectFiles, searchQuery);
+
+        system("cls");
+
+        if (sqlite3_exec(database, sql, PrintSearchResult, 0, &errorMessage) != SQLITE_OK) {
+            sqlite3_free(errorMessage);
+            exit(1);
+        }
+        fprintf(stderr, "\n%s\n", sql);
     }
 
     free(sql);
