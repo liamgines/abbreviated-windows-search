@@ -33,6 +33,11 @@ char *GetFilePath(File *files, uint64_t i) {
     }
 
     char *filePath = (char *) malloc(charactersRemaining * sizeof(char));
+    if (!filePath) {
+        fprintf(stderr, "\nWARNING: Ran out of memory when trying to allocate space for a file path. Database will be incomplete.");
+        return nullptr;
+    }
+
     filePath[--charactersRemaining] = 0;
 
     while (file.name != NULL) {
@@ -84,6 +89,7 @@ int main() {
     for (uint64_t i = 0; i < arrlen(files); i++) {
         files[i].path = GetPath(files, i);  // not a deep copy
     }
+    fprintf(stderr, "\n");
 
     sqlite3 *database;
 
@@ -107,6 +113,12 @@ int main() {
                                   "VALUES ";
 
     char *sql = (char *) malloc(SQL_SIZE * sizeof(char));
+    if (!sql) {
+        fprintf(stderr, "ERROR: Ran out of memory when trying to allocate space for SQL statements.\n");
+        sqlite3_close(database);
+        return 1;
+    }
+
     memcpy(sql, sqlInsertFilesHeader, strlen(sqlInsertFilesHeader));
     int sqlLength = strlen(sqlInsertFilesHeader);
     int valueLength;
@@ -133,6 +145,12 @@ int main() {
 
         else {
             char *value = (char *) malloc(valueLength * sizeof(char));
+            if (!value) {
+                fprintf(stderr, "ERROR: Ran out of memory when trying to allocate space to store a file path in the database.\n");
+                free(sql);
+                sqlite3_close(database);
+                return 1;
+            }
             snprintf(value, valueLength, "(\"%s\", \"%s\")", file.name, file.path);
             memcpy(&sql[sqlLength], value, strlen(value));
 
