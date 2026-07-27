@@ -178,26 +178,27 @@ int main(int argc, char **argv) {
                 exit(1);
             }
             sqlLength = strlen(sqlInsertFilesHeader);
+
+            i--;
+			continue;
         }
 
-        else {
-            char *value = (char *) malloc(valueLength * sizeof(char));
-            if (!value) {
-                fprintf(stderr, "ERROR: Ran out of memory when trying to allocate space to store a file path in the database.\n");
-				free(sql);
-                sqlite3_close(database);
-                return 1;
-            }
-            snprintf(value, valueLength, "(\"%s\", \"%s\")", file.name, file.path);
-            memcpy(&sql[sqlLength], value, strlen(value));
-
-            sqlLength += strlen(value);
-            free(value);
-
-            sql[sqlLength] = ',';
-            sql[++sqlLength] = ' ';
-            sqlLength += 1;
+        char *value = (char *) malloc(valueLength * sizeof(char));
+        if (!value) {
+            fprintf(stderr, "ERROR: Ran out of memory when trying to allocate space to store a file path in the database.\n");
+			free(sql);
+            sqlite3_close(database);
+            return 1;
         }
+        snprintf(value, valueLength, "(\"%s\", \"%s\")", file.name, file.path);
+        memcpy(&sql[sqlLength], value, strlen(value));
+
+        sqlLength += strlen(value);
+        free(value);
+
+        sql[sqlLength] = ',';
+        sql[++sqlLength] = ' ';
+        sqlLength += 1;
     }
 
     if (sqlLength > strlen(sqlInsertFilesHeader)) {
