@@ -14,7 +14,7 @@ Then compile with:
 
 	cl /ZI main.cpp sqlite3.c Shell32.lib /Fe:ws.exe
 
-Finally, add the compiled executable to your PATH.
+Finally, add the executable to your PATH.
 
 Usage
 --------
