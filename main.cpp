@@ -155,64 +155,24 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    memcpy(sql, sqlInsertFilesHeader, strlen(sqlInsertFilesHeader));
-    int sqlLength = strlen(sqlInsertFilesHeader);
-    int valueLength;
-
     for (uint64_t i = 0; i < arrlen(files); i++) {
         File file = files[i];
 
-        valueLength = GetFileValueLength(files, i) + 1;
+        int valueLength = GetFileValueLength(files, i) + 1;
         if (valueLength < 2) {
             continue;
         }
 
-        if (sqlLength + valueLength + 1 > SQL_SIZE) {
-            sql[--sqlLength] = 0;
-            sql[--sqlLength] = ';';
-
-            fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, sqlLength);   // insert files
-            if (sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
-				free(sql);
-                sqlite3_free(errorMessage);
-                exit(1);
-            }
-            sqlLength = strlen(sqlInsertFilesHeader);
-        }
-
-        else {
-            char *value = (char *) malloc(valueLength * sizeof(char));
-            if (!value) {
-                fprintf(stderr, "ERROR: Ran out of memory when trying to allocate space to store a file path in the database.\n");
-				free(sql);
-                sqlite3_close(database);
-                return 1;
-            }
-            snprintf(value, valueLength, "(\"%s\", \"%s\")", file.name, file.path);
-            memcpy(&sql[sqlLength], value, strlen(value));
-
-            sqlLength += strlen(value);
-            free(value);
-
-            sql[sqlLength] = ',';
-            sql[++sqlLength] = ' ';
-            sqlLength += 1;
-        }
-    }
-
-    if (sqlLength > strlen(sqlInsertFilesHeader)) {
-        sql[--sqlLength] = 0;
-        sql[--sqlLength] = ';';
-
-        fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, sqlLength);   // insert files
+        snprintf(sql, SQL_SIZE, "%s(\"%s\", \"%s\");", sqlInsertFilesHeader, file.name, file.path);
         if (sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
-			free(sql);
+            free(sql);
             sqlite3_free(errorMessage);
             exit(1);
         }
+        fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, strlen(sql));   // insert files
     }
 
-	free(sql);
+    free(sql);
     sqlite3_close(database);
     return 0;
 }
