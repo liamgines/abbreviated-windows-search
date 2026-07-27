@@ -81,42 +81,70 @@ static int PrintSearchResult(void *NotUsed, int argc, char **argv, char **azColN
     return 0;
 }
 
-int main() {
-    File *files = GetFiles();
+class Args {
+public:
+    char searchTerm[MAX_PATH];
 
-    fprintf(stderr, "\nCollecting file paths...\n");
-
-    for (uint64_t i = 0; i < arrlen(files); i++) {
-        files[i].path = GetPath(files, i);  // not a deep copy
+    Args(char *searchTerm) {
+		if (!searchTerm) {
+			this->searchTerm[0] = 0;
+			return;
+		}
+        memcpy(this->searchTerm, searchTerm, MAX_PATH);
+		this->searchTerm[MAX_PATH - 1] = 0;
     }
-    fprintf(stderr, "\n");
 
-    sqlite3 *database;
+	Args() : Args(NULL) {}
+};
 
-    CreateDirectory("C:\\Search", NULL);
-    DeleteFile("C:\\Search\\Search.db");
-    Ok(sqlite3_open("C:\\Search\\Search.db", &database));
-    char *errorMessage;
+int main(int argc, char **argv) {
+	Args args = (argc > 1) ? Args(argv[argc - 1]) : Args();
 
+	char sqlSelectFiles[] = "SELECT PATH || \"\\\" || NAME FROM FILES WHERE NAME LIKE ";
     char sqlCreateFiles[] = "CREATE TABLE IF NOT EXISTS FILES("
                             "NAME TEXT, "
                             "PATH TEXT"
                             ");";
-    fprintf(stderr, "\n%s\n\n", sqlCreateFiles);
-
-    if (sqlite3_exec(database, sqlCreateFiles, NULL, 0, &errorMessage) != SQLITE_OK) {
-        sqlite3_free(errorMessage);
-        exit(1);
-    }
-
     char sqlInsertFilesHeader[] = "INSERT INTO FILES (NAME, PATH) "
                                   "VALUES ";
 
-    char *sql = (char *) malloc(SQL_SIZE * sizeof(char));
+	sqlite3 *database;
+    char *errorMessage;
+	char *sql = (char *) malloc(SQL_SIZE * sizeof(char));
     if (!sql) {
         fprintf(stderr, "ERROR: Ran out of memory when trying to allocate space for SQL statements.\n");
-        sqlite3_close(database);
         return 1;
+    }
+
+	if (strlen(args.searchTerm) > 0) {
+	    Ok(sqlite3_open("C:\\Search\\Search.db", &database));
+		snprintf(sql, strlen(sqlSelectFiles) + 2 + strlen(args.searchTerm) + 2 + 1 + 1, "%s\"%%%s%%\";", sqlSelectFiles, args.searchTerm);
+		if (sqlite3_exec(database, sql, PrintSearchResult, 0, &errorMessage) != SQLITE_OK) {
+			fprintf(stderr, "ERROR: %s\n", errorMessage);
+			free(sql);
+			sqlite3_free(errorMessage);
+			exit(1);
+		}
+		free(sql);
+		sqlite3_close(database);
+		return 0;
+	}
+
+    CreateDirectory("C:\\Search", NULL);
+    DeleteFile("C:\\Search\\Search.db");
+    Ok(sqlite3_open("C:\\Search\\Search.db", &database));
+
+    fprintf(stderr, "\nCollecting file paths...\n");
+    File *files = GetFiles();
+    for (uint64_t i = 0; i < arrlen(files); i++) {
+        files[i].path = GetPath(files, i);  // not a deep copy
+    }
+
+    fprintf(stderr, "\n%s\n\n", sqlCreateFiles);
+    if (sqlite3_exec(database, sqlCreateFiles, NULL, 0, &errorMessage) != SQLITE_OK) {
+        free(sql);
+        sqlite3_free(errorMessage);
+        exit(1);
     }
 
     memcpy(sql, sqlInsertFilesHeader, strlen(sqlInsertFilesHeader));
@@ -137,6 +165,7 @@ int main() {
 
             fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, sqlLength);   // insert files
             if (sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
+				free(sql);
                 sqlite3_free(errorMessage);
                 exit(1);
             }
@@ -147,7 +176,7 @@ int main() {
             char *value = (char *) malloc(valueLength * sizeof(char));
             if (!value) {
                 fprintf(stderr, "ERROR: Ran out of memory when trying to allocate space to store a file path in the database.\n");
-                free(sql);
+				free(sql);
                 sqlite3_close(database);
                 return 1;
             }
@@ -169,32 +198,13 @@ int main() {
 
         fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, sqlLength);   // insert files
         if (sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
+			free(sql);
             sqlite3_free(errorMessage);
             exit(1);
         }
     }
 
-    char sqlSelectFiles[] = "SELECT PATH || \"\\\" || NAME FROM FILES WHERE NAME LIKE ";
-    char searchQuery[MAX_PATH + 1];
-    while (fprintf(stderr, "\nQuery: ") && fgets(searchQuery, sizeof(searchQuery), stdin) != NULL) {
-        if (searchQuery[0] == '\n') {
-            break;
-        }
-        searchQuery[strlen(searchQuery) - 1] = 0;
-        snprintf(sql, strlen(sqlSelectFiles) + 2 + strlen(searchQuery) + 2 + 1 + 1, "%s\"%%%s%%\";", sqlSelectFiles, searchQuery);
-
-        system("cls");
-
-        if (sqlite3_exec(database, sql, PrintSearchResult, 0, &errorMessage) != SQLITE_OK) {
-            sqlite3_free(errorMessage);
-            exit(1);
-        }
-        fprintf(stderr, "\n%s\n", sql);
-    }
-
-    free(sql);
-
+	free(sql);
     sqlite3_close(database);
-
     return 0;
 }
