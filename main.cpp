@@ -156,20 +156,43 @@ int main(int argc, char **argv) {
     }
 
     for (uint64_t i = 0; i < arrlen(files); i++) {
-        File file = files[i];
+        snprintf(sql, SQL_SIZE, "%s", sqlInsertFilesHeader);
 
-        int valueLength = GetFileValueLength(files, i) + 1;
-        if (valueLength < 2) {
-            continue;
+        int j = i;
+        for (j; j < arrlen(files); j++) {
+            File file = files[j];
+            int valueLength = GetFileValueLength(files, j) + 1;
+            if (valueLength < 2) {
+                continue;
+            }
+
+            // https://cplusplus.com/reference/cstdio/snprintf/
+            char *writeStart = &sql[strlen(sql)];
+            int charactersRemaining = SQL_SIZE - strlen(sql);
+            int returnValue = snprintf(writeStart, charactersRemaining, "(\"%s\", \"%s\"), ", file.name, file.path);
+            if ((returnValue < 0 || returnValue >= charactersRemaining)) {
+                *(writeStart - 1) = 0;
+                *(writeStart - 2) = ';';
+                break;
+            }
+            else if (j == arrlen(files) - 1) {
+                sql[strlen(sql) - 1] = 0;
+                sql[strlen(sql) - 1] = ';';
+            }
         }
 
-        snprintf(sql, SQL_SIZE, "%s(\"%s\", \"%s\");", sqlInsertFilesHeader, file.name, file.path);
-        if (sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
+        if (strlen(sql) > strlen(sqlInsertFilesHeader) && sqlite3_exec(database, sql, NULL, 0, &errorMessage) != SQLITE_OK) {
+            fprintf(stderr, "DATABASE ERROR: %s\n", errorMessage);
             free(sql);
             sqlite3_free(errorMessage);
             exit(1);
         }
-        fprintf(stderr, "%s(%zu characters)\n", sqlInsertFilesHeader, strlen(sql));   // insert files
+        fprintf(stderr, "%s(%zu characters)\n", sqlInsertFilesHeader, strlen(sql) - strlen(sqlInsertFilesHeader));   // insert files
+
+        if (i >= j) {
+            break;
+        }
+        i = j - 1;
     }
 
     free(sql);
