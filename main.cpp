@@ -134,8 +134,14 @@ int main(int argc, char **argv) {
     DeleteFile("C:\\Search\\Search.db");
     Ok(sqlite3_open("C:\\Search\\Search.db", &database));
 
-    fprintf(stderr, "\nCollecting file paths...\n");
     File *files = GetFiles();
+    if (!files) {
+        fprintf(stderr, "\nRequesting admin privileges...\n");
+        ShellExecute(NULL, "runas", argv[0], NULL, NULL, SW_SHOWNORMAL);
+        return 1;
+    }
+
+    fprintf(stderr, "\nCollecting file paths...\n");
     for (uint64_t i = 0; i < arrlen(files); i++) {
         files[i].path = GetPath(files, i);  // not a deep copy
     }

@@ -163,21 +163,27 @@ char *DuplicateName(wchar_t *name, size_t nameLength) {
     return buffer;
 }
 
-void Read(void *buffer, uint64_t from, uint64_t count) {
+bool Read(void *buffer, uint64_t from, uint64_t count) {
     LONG high = from >> 32;
     SetFilePointer(drive, from & 0xFFFFFFFF, &high, FILE_BEGIN);
     ReadFile(drive, buffer, count, &bytesAccessed, NULL);
-    assert(bytesAccessed == count);
+    // assert(bytesAccessed == count);
+    return bytesAccessed == count;
 }
 
 File *GetFiles() {
     drive = CreateFile("\\\\.\\C:", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 
-    Read(&bootSector, 0, 512);
+    // https://stackoverflow.com/questions/6418791/requesting-administrator-privileges-at-run-time#comment7530317_6418873
+    if (!Read(&bootSector, 0, 512)) {
+        return NULL;
+    }
 
     uint64_t bytesPerCluster = bootSector.bytesPerSector * bootSector.sectorsPerCluster;
 
-    Read(&mftFile, bootSector.mftStart * bytesPerCluster, MFT_FILE_SIZE);
+    if (!Read(&mftFile, bootSector.mftStart * bytesPerCluster, MFT_FILE_SIZE)) {
+        return NULL;
+    }
 
     FileRecordHeader *fileRecord = (FileRecordHeader *) mftFile;
     AttributeHeader *attribute = (AttributeHeader *) (mftFile + fileRecord->firstAttributeOffset);
@@ -229,7 +235,9 @@ File *GetFiles() {
 
             uint64_t filesToLoad = MFT_FILES_PER_BUFFER;
             if (filesRemaining < MFT_FILES_PER_BUFFER) filesToLoad = filesRemaining;
-            Read(&mftBuffer, clusterNumber * bytesPerCluster + positionInBlock, filesToLoad * MFT_FILE_SIZE);
+            if (!Read(&mftBuffer, clusterNumber * bytesPerCluster + positionInBlock, filesToLoad * MFT_FILE_SIZE)) {
+                return NULL;
+            }
             positionInBlock += filesToLoad * MFT_FILE_SIZE;
             filesRemaining -= filesToLoad;
 
