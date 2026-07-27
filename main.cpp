@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
             sqlite3_free(errorMessage);
             exit(1);
         }
-        fprintf(stderr, "%s(%d characters)\n", sqlInsertFilesHeader, strlen(sql));   // insert files
+        fprintf(stderr, "%s(%zu characters)\n", sqlInsertFilesHeader, strlen(sql));   // insert files
     }
 
     free(sql);
