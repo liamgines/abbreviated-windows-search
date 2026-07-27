@@ -20,6 +20,6 @@ First, run `ws` without any arguments to create an index of system files.
 
 	ws
 
-Then run `ws` with a filename to find where it might be. Note that the filename doesn't have to be an exact match.
+Then run `ws` with a filename to find where a file might be. Note that the filename doesn't have to be an exact match.
 
 	ws <filename>
