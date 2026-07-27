@@ -132,16 +132,16 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-    CreateDirectory("C:\\Search", NULL);
-    DeleteFile("C:\\Search\\Search.db");
-    Ok(sqlite3_open("C:\\Search\\Search.db", &database));
-
     File *files = GetFiles();
     if (!files) {
         fprintf(stderr, "\nRequesting admin privileges...\n");
         ShellExecute(NULL, "runas", argv[0], NULL, NULL, SW_SHOWNORMAL);
         return 1;
     }
+
+    CreateDirectory("C:\\Search", NULL);
+    DeleteFile("C:\\Search\\Search.db");
+    Ok(sqlite3_open("C:\\Search\\Search.db", &database));
 
     fprintf(stderr, "\nCollecting file paths...\n");
     for (uint64_t i = 0; i < arrlen(files); i++) {
