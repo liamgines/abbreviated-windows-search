@@ -119,8 +119,10 @@ int main(int argc, char **argv) {
 	if (strlen(args.searchTerm) > 0) {
 	    Ok(sqlite3_open("C:\\Search\\Search.db", &database));
 		snprintf(sql, strlen(sqlSelectFiles) + 2 + strlen(args.searchTerm) + 2 + 1 + 1, "%s\"%%%s%%\";", sqlSelectFiles, args.searchTerm);
+		fprintf(stderr, "\n");
 		if (sqlite3_exec(database, sql, PrintSearchResult, 0, &errorMessage) != SQLITE_OK) {
-			fprintf(stderr, "ERROR: %s\n", errorMessage);
+			fprintf(stderr, "DATABASE ERROR: %s\n", errorMessage);
+			fprintf(stderr, "Run the exe without a search term to build the database first.\n");
 			free(sql);
 			sqlite3_free(errorMessage);
 			exit(1);
