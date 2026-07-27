@@ -262,7 +262,13 @@ File *GetFiles() {
                         if (fileNameAttribute->namespaceType != 2 && !fileNameAttribute->nonResident) {
                             File file = {};
                             file.parent = fileNameAttribute->parentRecordNumber;
-                            file.name = DuplicateName(fileNameAttribute->fileName, fileNameAttribute->fileNameLength);
+                            if (file.parent != fileRecord->recordNumber) {
+                                file.name = DuplicateName(fileNameAttribute->fileName, fileNameAttribute->fileNameLength);
+                            }
+                            else {
+                                wchar_t driveLetter[] = L"C:";
+                                file.name = DuplicateName(driveLetter, wcslen(driveLetter));
+                            }
 
                             uint64_t oldLength = arrlenu(files);
 
