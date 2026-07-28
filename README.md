@@ -25,3 +25,9 @@ First, run `ws` without any arguments to create an index of system files.
 Then run `ws` with a filename to find where a file might be. Note that the filename doesn't have to be an exact match.
 
 	ws <filename>
+
+Attributions
+--------
+1. `mftreader.hpp` (renamed and modified for this project) derived from [Tutorial/Parsing the MFT](https://handmade.network/forums/articles/t/7002-tutorial_parsing_the_mft) by Nakst, [The Unlicense](https://unlicense.org/)
+2. `stb_ds.h` from [stb](https://github.com/nothings/stb) by Sean Barrett, [The Unlicense](https://unlicense.org/)
+3. `sqlite3.c` and `sqlite3.h` from [SQLite](https://sqlite.org/) by D. Richard Hipp and other developers, [Public Domain](https://sqlite.org/copyright.html)
