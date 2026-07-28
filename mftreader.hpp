@@ -246,8 +246,12 @@ File *GetFiles() {
                 // so there's not much point in multithreading this.
 
                 FileRecordHeader *fileRecord = (FileRecordHeader *) (mftBuffer + MFT_FILE_SIZE * i);
+
+                // https://stackoverflow.com/a/54830754
+                // https://people.cs.umass.edu/~liberato/courses/2019-spring-compsci365/lecture-notes/14-more-on-ntfs/
                 wchar_t *overwrittenData = (wchar_t *) ((uint8_t *) fileRecord + MFT_FILE_SIZE / 2 - 2);
                 *overwrittenData = fileRecord->updateSequenceArray[0];
+
                 recordsProcessed++;
 
                 if (!fileRecord->inUse) continue;
