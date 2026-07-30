@@ -100,7 +100,7 @@ public:
 int main(int argc, char **argv) {
 	Args args = (argc > 1) ? Args(argv[argc - 1]) : Args();
 
-	char sqlSelectFiles[] = "SELECT PATH || \"\\\" || NAME FROM FILES WHERE NAME LIKE ";
+	char sqlSelectFiles[] = "SELECT FILEPATH FROM (SELECT PATH || \"\\\" || NAME AS FILEPATH FROM FILES) WHERE FILEPATH LIKE ";
     char sqlCreateFiles[] = "CREATE TABLE IF NOT EXISTS FILES("
                             "NAME TEXT, "
                             "PATH TEXT"
