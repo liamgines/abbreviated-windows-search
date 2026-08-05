@@ -2,6 +2,8 @@ file-search
 ========
 A command-line file search utility for Windows.
 
+![Screenshot](screenshot.png)
+
 Installation
 --------
 With Visual Studio installed, you can run:
